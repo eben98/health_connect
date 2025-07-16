@@ -151,9 +151,16 @@ class _HealthDataScreenState extends State<HealthDataScreen> {
           margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           elevation: 2,
           child: ListTile(
-            title: Text("${p.typeString}: ${p.value}", style: const TextStyle(fontWeight: FontWeight.w500)),
+            title: Text("${p.typeString}: ${p.value.toString()}", style: const TextStyle(fontWeight: FontWeight.w500)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Date: ${p.dateFrom}'),
+                // Display the source name, which often indicates the device
+                Text('Source: ${p.sourceName}'),
+              ],
+            ),
             trailing: Text(p.unitString ?? ''),
-            subtitle: Text('${p.dateFrom} - ${p.dateTo}'),
           ),
         );
       },
