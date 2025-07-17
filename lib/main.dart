@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:health/health.dart';
 import 'dart:async';
 
+import 'package:permission_handler/permission_handler.dart';
+
 void main() {
   runApp(const HealthAppDemo());
 }
@@ -59,6 +61,19 @@ enum AppState {
 class _HealthDataScreenState extends State<HealthDataScreen> {
   List<HealthDataPoint> _healthDataList = [];
   AppState _state = AppState.IDLE;
+
+  @override
+  void initState() {
+    super.initState();
+    requestPermissions().then((_) => authorize());
+  }
+
+  Future<void> requestPermissions() async {
+    await Permission.activityRecognition.request();
+    await Permission.sensors.request();
+    await Permission.storage.request();
+    await Permission.notification.request();
+  }
 
   // Create a Health instance for interacting with the health data.
   final Health _health = Health();
