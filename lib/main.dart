@@ -1,5 +1,9 @@
+import 'dart:io';
+
+import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:health/health.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 
 import 'package:permission_handler/permission_handler.dart';
@@ -187,6 +191,63 @@ class _HealthDataScreenState extends State<HealthDataScreen> {
     });
   }
 
+  /// Exports the fetched health data to a CSV file.
+  Future<void> _exportToCsv() async {
+    if (_healthDataList.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No data to export.')),
+      );
+      return;
+    }
+
+    // Prepare the data for CSV conversion
+    List<List<dynamic>> rows = [];
+
+    // Add the header row
+    rows.add([
+      "DataType",
+      "Value",
+      "Unit",
+      "DateFrom",
+      "DateTo",
+      "SourceName"
+    ]);
+
+    // Add the data rows
+    for (HealthDataPoint p in _healthDataList) {
+      rows.add([
+        p.typeString,
+        p.value.toString(), // Use .toString() for simplicity to handle all value types
+        p.unitString,
+        p.dateFrom,
+        p.dateTo,
+        p.sourceName
+      ]);
+    }
+
+    // Convert to CSV string
+    String csvData = const ListToCsvConverter().convert(rows);
+
+    try {
+      // Get the application's documents directory
+      final directory = await getApplicationDocumentsDirectory();
+      final path = '${directory.path}/health_data.csv';
+      final file = File(path);
+
+      // Write the CSV data to the file
+      await file.writeAsString(csvData);
+
+      // Show a confirmation message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Data exported to: $path')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error exporting data: $e')),
+      );
+    }
+  }
+
   Widget _buildTryAgainButton() {
     return ElevatedButton(
       onPressed: _isInitializing ? null : _initAndFetch, // Disable button while initializing
@@ -272,6 +333,12 @@ class _HealthDataScreenState extends State<HealthDataScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: fetchData,
+          ),
+          // The new export button
+          IconButton(
+            icon: const Icon(Icons.file_upload),
+            onPressed: _healthDataList.isNotEmpty ? _exportToCsv : null, // Enable only when data is ready
+            tooltip: 'Export to CSV',
           )
         ],
       ),
